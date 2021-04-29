@@ -13,7 +13,7 @@ author:
 ## Nmap
 
 ```shell
-# Nmap 7.91 scan initiated Fri Apr 23 21:35:53 2021 as: nmap -sS -A -p 1-65535 -v -oA Nibbles 192.168.137.47
+Nmap 7.91 scan initiated Fri Apr 23 21:35:53 2021 as: nmap -sS -A -p 1-65535 -v -oA Nibbles 192.168.137.47
 Nmap scan report for 192.168.137.47
 Host is up (0.22s latency).
 Not shown: 65529 filtered ports
@@ -58,7 +58,7 @@ HOP RTT       ADDRESS
 
 Read data files from: /usr/bin/../share/nmap
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-# Nmap done at Fri Apr 23 21:40:22 2021 -- 1 IP address (1 host up) scanned in 269.14 seconds```
+Nmap done at Fri Apr 23 21:40:22 2021 -- 1 IP address (1 host up) scanned in 269.14 seconds```
 
 The initial nmap scan reveals a few services that might give us a way in: FTP, HTTP, PostgreSQL. Initial thoughts:
 
