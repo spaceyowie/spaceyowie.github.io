@@ -6,8 +6,6 @@ author:
   - spaceyowie
 ---
 
-## Nibbles
-
 > This machine will highlight why we have hardening guidelines.
 
 ## Nmap
